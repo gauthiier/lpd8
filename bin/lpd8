@@ -1,0 +1,135 @@
+#! /usr/local/bin/node
+'use strict';
+
+// straight forward
+
+var args = require('commander');
+
+args
+	.version('0.1')
+	.option('-c, --conf [value]', 'LPD8 config file')
+	.parse(process.argv);
+
+
+var lpd8 = require('../lib/lpd8.js')
+var lpd8sb = require('../lib/lpd8-spacebrew.js')
+
+var midi = require('midi');
+var input = new midi.input();
+
+var fs = require('fs');
+
+/* - - - 
+	LIST MIDI PORTS
+- - - - */
+
+function list_ports() {
+	var ports = []
+	for (var i = 0; i < input.getPortCount(); i++)
+		ports.push(input.getPortName(i));
+	return ports;
+}
+
+var input_ports = list_ports();
+
+if (input_ports.length < 1){
+	console.log('no midi port detected...');
+	process.exit();
+}
+
+var menu = require("terminal-menu")({width:35});
+menu.reset();
+menu.write('AKAI LPD8 midi forward\n');
+menu.write('----------------------\n');
+
+for(var i = 0; i < input_ports.length; i++) {
+	menu.add(input_ports[i]);
+}
+
+menu.add('exit');
+
+menu.on('select', function(item, index) {	
+	if (item == 'exit') {
+		menu.reset();
+		menu.close();		
+		process.exit();
+	}
+	else {
+		menu.reset();
+		menu.close();		
+		init_lpd8();
+		open_midi_port(item, index);
+	}
+});
+
+menu.on('close', function () {
+    process.stdin.setRawMode(false);
+    process.stdin.end();
+});
+
+process.stdin.pipe(menu.createStream()).pipe(process.stdout);
+process.stdin.setRawMode(true);
+
+process.stdin.setEncoding( 'utf8' );
+
+process.stdin.on( 'data', function( key ){  
+  if ( key === '\u001B' ) {
+  	quit();
+    process.exit();
+  }
+});
+
+function quit() {
+	menu.reset();
+	menu.close();			
+	input.closePort();
+}
+
+/* - - - 
+	LPD8
+- - - - */
+
+var LPD8 = null;
+var LPD8SB = null;
+
+function init_lpd8() {
+	
+	LPD8 = new lpd8.LPD8(args.conf);
+	LPD8SB = new lpd8sb.LPD8_SB(LPD8);
+
+	LPD8.set_pad_cb(function (...params) {
+		LPD8SB.signal(params);
+	});
+
+	LPD8.set_kontrol_cb(function (...params) {
+		LPD8SB.signal(params);
+	});
+
+}
+
+/* - - - 
+	MIDI
+- - - - */
+
+input.on('message', function(deltaTime, message) {
+	if(LPD8) LPD8.midi_signal(message, deltaTime);
+});
+
+function open_midi_port(port_name, index) {
+	console.log('opening port: ' + port_name);
+	input.openPort(index);
+}
+
+function close_midi_port() {
+	input.closePort()
+}
+
+
+
+
+
+
+
+
+
+

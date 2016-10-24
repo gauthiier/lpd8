@@ -1,0 +1,21 @@
+{
+  "name": "lpd8",
+  "version": "0.1",
+  "description": "akai lpd8 midi forwarder/router",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Errorrrr: no no no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lpd8",
+    "midi"
+  ],
+  "author": "gauthiier",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.9.0",
+    "midi": "^0.9.5",
+    "spacebrew": "0.0.2",
+    "terminal-menu": "^2.1.1"
+  }
+}

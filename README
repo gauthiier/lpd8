@@ -1,0 +1,9 @@
+  akai lpd8 midi forwarder/router
+  -- 
+  Usage: lpd8 [options]
+
+  Options:
+
+    -h, --help          output usage information
+    -V, --version       output the version number
+    -c, --conf [value]  LPD8 config file
